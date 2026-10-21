@@ -2,6 +2,8 @@
 
 Date: 2026-10-21 · Status: **Approved by the user as the converged plan. Normative for RTL, the reference model, and firmware until superseded.** Encodings (ISA bit layout, host command bytes) are frozen at gate G2 and will be added under `spec/`.
 
+**Revision 2 (2026-10-21, user-approved):** the goal changed from "win the tapeout slot" to "build something Jane Street's hardware engineers would actually use, and get noticed for it." Added: sim+bench as the core value (§1, §10a), the OCaml host library and experiment format with expect-test output (§10a, §12), the reusable Hardcaml testbench component (§10a), the simulation-replay second act (§10), code quality and docs as first-class (§14), and building in public (§13a). Breadth stays in scope. Cuts happen later at the gates, only if time runs out (§13). Pending Codex review.
+
 **Supersedes (kept as historical inputs, not edited):**
 
 - [`plans.md`](../../../plans.md): Codex proposal
@@ -16,11 +18,22 @@ Conventions: **MUST** = normative. *Provisional* = a value fixed at the named ga
 
 ## 1. Goal, identity, claims
 
-**Goal.** Submit a working, verified, open-source protocol emulator for IHP 130 nm CMOS5L in a 6×4 Tiny Tapeout allocation by **Jan 11, 2027** (official deadline Jan 18), designed to compete for the Jane Street tapeout slot.
+**Goal.** Build an open-source protocol emulator that **Jane Street's hardware engineers would actually use**, built well enough that its authors get noticed. The yardstick is "would a Hardcaml engineer reach for this on a normal workday?", not "does it make a good demo?" Submitting a working, verified design for IHP 130 nm CMOS5L in a 6×4 Tiny Tapeout allocation by **Jan 11, 2027** (official deadline Jan 18) is a required milestone on the way, not the end goal.
+
+**Core value: the same protocol program runs in your Hardcaml simulation and on the bench.** PEX is itself written in Hardcaml, so:
+
+- a Hardcaml user can instantiate it in a cyclesim testbench as a programmable protocol peer next to their own design;
+- the same firmware and experiment can later run against their real board through the chip;
+- a failure the chip finds on the bench can be replayed in simulation with the same stimulus.
+
+We cannot know what Jane Street uses internally (they may already have protocol testbench components). Early feedback (§13a) is the only real evidence available.
 
 **Identity.** PEX is a two-context protocol processor in which **firmware decides what happens on a pin, and hardware decides when.** Pin changes are scheduled as timed actions with deadlines relative to the previous deadline or to a timestamped input event. They are never tied to instruction retirement. A missed deadline is a reported fault, never a silent late edge.
 
-**Flagship demonstration.** An I2C *timing-tolerance map*: PEX emulates an I2C target and sweeps its timing cycle by cycle against a real, unmodified controller. It classifies every point (pass, the various failure kinds, emulator-invalid) and shows the specification limits on the same map.
+**Flagship demonstration, in two acts.**
+
+1. An I2C *timing-tolerance map*. PEX emulates an I2C target and sweeps its timing cycle by cycle against a real, unmodified controller. It classifies every point (pass, the various failure kinds, emulator-invalid) and shows the specification limits on the same map.
+2. **Bench → simulation.** A failure found on the bench against a controller whose RTL we have is reproduced by running the identical experiment in Hardcaml simulation, then fixed, with the fix shown passing on both (§10).
 
 **Claims rules (MUST):**
 
@@ -210,7 +223,7 @@ Every published rate comes with clock frequency, cycle budget, I/O assumptions, 
 
 ---
 
-## 10. Flagship demo: I2C timing-tolerance map
+## 10. Flagship demo: I2C timing-tolerance map (Act 1) and bench → simulation (Act 2)
 
 **Setup.**
 
@@ -254,7 +267,44 @@ Results describe *this controller in this configuration*, not an intrinsic prope
 
 **Fair baseline:** implement the same target sweep on RP2040 PIO. Report program size, measured edge-placement error vs. the logic analyzer, whether emulator-invalid points are detectable, and host involvement. A documentation-level comparison with XMOS is labelled as such.
 
-**Extension (after G4 only):** pick one controlled failing point, save its experiment record, and show the same failure class reproducing on hardware across 20 resets. Reducing it into a simulation regression requires a controller whose RTL we control, and is attempted only if all baseline gates have passed.
+### Act 2: bench → simulation
+
+- **Controller:** a small I2C controller written by us in Hardcaml (`demo/`), running on the FPGA. It is a second device under test whose RTL we have. It is demo RTL, not chip RTL, so the chip freeze does not apply to it.
+- **Its defect is real or labelled.** If the map exposes a genuine timing-tolerance defect in our controller (e.g. mishandled stretching), we use it. Otherwise we seed one and **label it as seeded**.
+- **Steps:**
+  1. Run the map against our controller and pick one failing point.
+  2. Save its experiment value (§10a).
+  3. Show the same failure class across 20 resets on the bench.
+  4. Run the **identical experiment value** with the `Sim` backend: PEX RTL + our controller RTL in Hardcaml cyclesim. It reproduces the same outcome class and renders an expect-test waveform.
+  5. Fix the controller, then show the saved experiment passing in simulation and on the FPGA.
+- **Claim boundary:** replay reproduces *digital, deterministic* failures of RTL we have. It does not simulate arbitrary boards, analog effects, or pull-up behavior. Automated minimization of the failing case (delta reduction) is a separate optional extension.
+
+## 10a. Using PEX: experiments, backends, testbench component
+
+These are first-class deliverables, not demo glue.
+
+- **Experiment value (OCaml):** a typed description holding:
+  - firmware (assembled program + start addresses);
+  - configuration (pin ownership, maps, modes);
+  - parameters P0–P3 per context;
+  - experiment ID;
+  - transaction script (host FIFO pushes/pops, expected responses, timeouts);
+  - trace mode;
+  - pass/fail predicate over results.
+
+  It serializes to a file, so every interesting bench point is saved and replayable.
+- **Backends behind one interface:**
+  - `Sim`: PEX Hardcaml RTL in cyclesim, optionally wired to a user circuit's ports;
+  - `Model`: Codex's Python reference model, via a subprocess, for cross-checks;
+  - `Board`: host SPI to the FPGA or the TT chip, through a thin shim.
+
+  All three return the same result type: outcome class, faults/flags, FIFO data, trace entries.
+- **Output:** results render as **expect-test-friendly text**, with ASCII waveforms of commits and events in Jane Street's published style. A bench run and a simulation run can be compared as text diffs.
+- **Hardcaml testbench component:** a documented `Pex` module (interface + configuration helpers) that a user instantiates in their own testbench, plus a small protocol firmware library (UART, SPI controller/target, I2C controller/target, custom protocol) with documented parameters. At least two worked examples: PEX as an I2C target next to a user I2C controller, and PEX as a UART peer.
+- **Equivalence check (required), for every protocol example:**
+  - **Open-loop programs** (no input dependence): `Sim` and `Board` produce identical commit streams (cycles, pins), checked against logic-analyzer captures.
+  - **Reactive programs:** identical outcome classes and identical **event-relative commit offsets** (`D − CAPT`). Absolute cycles differ with asynchronous input phase.
+  - Bench-only differences (pad delay, synchronizer phase) are documented, not hidden.
 
 ---
 
@@ -284,7 +334,7 @@ Every bug found becomes a saved seed or test.
 - Hardcaml via opam (`hardcaml`, `hardcaml_waveterm`, `ppx_hardcaml`) → Verilog in the template's `src/`.
 - GDS via the template's GitHub Actions. Local work is simulation only (Hardcaml cyclesim, Verilator, cocotb) plus SymbiYosys.
 - Assembler in OCaml, sharing one ISA definition with the RTL generator.
-- Host tools in Python.
+- **Host library, experiment format and backends in OCaml** (§10a), with expect-test output. Python is limited to a thin board shim (MicroPython on the TT demo board's RP2040, or pyftdi) that relays SPI frames, plus the Pico DUT scripts. The reference model stays in Python, for independence (§11).
 - All tool, PDK, template and macro versions are pinned in the repo.
 - **FPGA (user purchase):** an ECP5 board with an open flow (e.g. ULX3S or OrangeCrab), or a Tang Nano 20K as the low-cost option. Check before buying: 3.3 V headers, enough logic for the full design (iCE40 UP5K is likely too small), Yosys accepts Hardcaml output. Also a ~$15 sigrok-compatible logic analyzer.
 
@@ -296,32 +346,51 @@ Every bug found becomes a saved seed or test.
 |---|---|---|
 | Oct 21–27 | Recheck rules. Public repo. Toolchain. Minimal Hardcaml block → GDS through template CI. Codex starts the model | Reproducible flow run |
 | **G1, Nov 1** | Memory probes: FF 128×16 vs SRAM routed trial | Measured µm², utilization, timing. **Memory decided** |
-| **G2, Nov 3** | Model executes §4. UART/SPI/I2C/custom firmware written and passing on the model. Encodings written to `spec/` | **ISA, `L_min`, widths, host commands frozen** |
-| Nov 4–10 | RTL: core, actions, events, host SPI, FIFOs | UART TX/RX in RTL sim vs third-party oracle; V2 harness live |
-| **G3, Nov 17** | Full-chip GDS; SPI/I2C in RTL sim | Area, utilization and Fmax measured. Decide S=2 or S=4 and the clock. Scope cut if over |
-| **G4, Dec 1** | FPGA bring-up (board ordered by Oct 31); required protocols on hardware; first full I2C map | Logic-analyzer-verified protocols; one complete map |
-| **G5, Dec 6** | **Hardware feature freeze** | After this: bug fixes only, each with a regression. New work is firmware, verification and docs only |
-| Dec 7–20 | V4–V9 completion, map repeatability, PIO baseline, physical closure iterations | Demo gates (§10) met; reports for the candidate revision |
-| Dec 21–Jan 4 | Docs, demo video, clean-clone reproduction by someone else | Reproduction succeeds |
+| **G2, Nov 3** | Model executes §4. UART/SPI/I2C/custom firmware written and passing on the model. Encodings written to `spec/`. Experiment type drafted (§10a). Design note drafted (§13a) | **ISA, `L_min`, widths, host commands frozen** |
+| Nov 4–10 | RTL: core, actions, events, host SPI, FIFOs. OCaml host library skeleton; `Sim` backend | UART TX/RX in RTL sim vs third-party oracle, run through the `Sim` backend with expect-test output; V2 harness live |
+| **G3, Nov 17** | Full-chip GDS; SPI/I2C in RTL sim; `Pex` testbench component API v0 documented | Area, utilization and Fmax measured. Decide S=2 or S=4 and the clock. **Hours check + cut proposal to user** |
+| **G4, Dec 1** | FPGA bring-up (board ordered by Oct 31); required protocols on hardware; `Board` backend; first full I2C map; our I2C controller (`demo/`) on FPGA | Logic-analyzer-verified protocols; one complete map; same experiments pass on `Sim` and `Board` (§10a check). **Hours check + cut proposal to user** |
+| **G5, Dec 6** | **Chip hardware feature freeze** | After this: chip bug fixes only, each with a regression. Firmware, host, testbench, demo RTL, verification and docs continue |
+| Dec 7–20 | Act 2 (bench → sim → fix). Testbench examples + docs. V4–V9 completion, map repeatability, PIO baseline, physical closure iterations. Breadth firmware protocols if time allows | Demo gates (§10) met; Act 2 shown; reports for the candidate revision |
+| Dec 21–Jan 4 | Docs, demo video, clean-clone reproduction, **usability test** (§14) | Reproduction and usability test succeed |
 | **Jan 11** | **Submit** | Submitted revision tagged |
 | Jan 12–18 | Buffer for portal or integration issues only | — |
 
-**Workload control.** Track human hours weekly against ~176 h. If any gate is missed or cumulative hours run >15% over plan, apply the cut order immediately.
+**Workload (judgment).** Estimated scope:
 
-**Cut order** (first cut first):
+| Component | Hours |
+|---|---|
+| Baseline | ~163 |
+| Verification extras | ~18 |
+| Usability additions: OCaml host + backends, testbench component, Act 2, docs uplift, write-ups | ~46 |
+| Breadth firmware protocols | ~15 |
+| **Total** | **~242** |
 
-1. Reduction/simulation extension
+That is about 66 h more than the ~176 h available before Jan 11. Per the user's decision, **full scope stays in plan and nothing is cut in advance.** Track human hours weekly. At G3 and G4, Claude presents actual-vs-remaining hours and a cut proposal, and **the user decides** what, if anything, to cut. A missed gate triggers the same review immediately.
+
+**Proposed cut order** (applied only by user decision; first cut first):
+
+1. Automated reduction (delta minimization) of failing cases
 2. Firmware protocols beyond the required set
 3. V6 analyzer
-4. V5 beyond bounded
-5. Trace depth
-6. SPI target rate → floor
+4. PIO characterization beyond one equal-workload comparison
+5. V5 beyond bounded
+6. Second testbench worked example
+7. Trace depth
+8. SPI target rate → floor
 
-**Never cut:** the required protocols, timed actions with `LATE`, valid/invalid experiment classification, V1+V2 independence, passing physical flow, reproducible build.
+**Never cut:** the required protocols; timed actions with `LATE`; valid/invalid experiment classification; V1+V2 independence; passing physical flow; reproducible build; **the same experiment running on `Sim` and `Board`**; **Act 2**; the `Pex` testbench component with at least one worked example; user-facing docs.
+
+### 13a. Building in public
+
+- The repo is public from Oct 24 (§16) and every commit is visible.
+- **Short progress write-up at each gate** (G1–G5) in `docs/log/`: what was measured, what failed, what changed. Failures are included; measured honesty is part of what gets noticed.
+- **Design note to `asic-competition@janestreet.com` after G2.** Claude drafts it and **the user decides whether and when to send**. Contents: one page on the sim+bench idea, the timing contract, the plan, and one direct question: *what would make a tool like this useful to your hardware team?* Feedback received changes this spec only through the normal approval rule (§15).
+- No claims in public material beyond what §1's claims rules allow.
 
 ---
 
-## 14. Acceptance metrics (submission)
+## 14. Acceptance metrics (release)
 
 | Metric | Gate |
 |---|---|
@@ -336,6 +405,9 @@ Every bug found becomes a saved seed or test.
 | Generality | Custom protocol works with no RTL change |
 | Baseline comparison | Equal-workload PIO comparison published with limitations |
 | Reproduction | Clean checkout + pinned tools rebuilds and reruns the demo |
+| **Sim/bench equivalence** | §10a check passes for every protocol example |
+| **Usability** | Someone outside the project (not the user, not an agent) instantiates `Pex` in a Hardcaml testbench and runs an example experiment **from the docs alone**. Time taken and every stumbling point are recorded, and docs are fixed until a fresh attempt takes under 1 hour |
+| **Code quality** | Every public OCaml module documented (odoc); `dune build @doc` and the build are warning-free; Hardcaml written in the idioms of Jane Street's public Hardcaml examples, reviewed against them before freeze |
 
 ---
 
@@ -344,9 +416,10 @@ Every bug found becomes a saved seed or test.
 | Area | Owner | Paths |
 |---|---|---|
 | Decisions, purchases, bench work, final acceptance | User | — |
-| Hardcaml RTL, assembler, firmware examples, host loader/sweep tools | Claude | `hw/`, `src/` (generated), `tools/asm/`, `fw/`, `host/` |
+| Hardcaml RTL, `Pex` testbench component, assembler, firmware library, OCaml host library + backends + board shim, demo I2C controller, gate write-ups | Claude | `hw/`, `src/` (generated), `tools/asm/`, `fw/`, `host/`, `demo/`, `docs/log/` |
 | Reference model, differential harness, formal properties, timing/feasibility review, PIO/XMOS baseline | Codex | `model/`, `verif/`, `docs/feasibility/` |
 | This spec and `spec/` encodings | Shared: **changes need the user's approval and review by both agents** | `docs/superpowers/specs/`, `spec/` |
+| `Model` backend interface (CLI/JSON between `host/` and `model/`) | Codex defines it in `model/`; Claude writes the adapter in `host/` | — |
 
 Rules (MUST):
 
@@ -368,3 +441,6 @@ Rules (MUST):
 | `AT` immediate width, word width, `L_min`, FIFO/trace depths, custom protocol | Firmware study | G2, Nov 3 |
 | S (2 vs 4), declared core clock | Measured | G3, Nov 17 |
 | Published SPI-target rate | Measured | G4, Dec 1 |
+| Whether and when to send the design note (§13a) | User | after G2 |
+| Cuts, if any (§13) | User | G3 and G4 |
+| Find an outside usability tester (§14) | User | Dec 21 |
