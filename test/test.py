@@ -7,7 +7,7 @@
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, FallingEdge
+from cocotb.triggers import ClockCycles, FallingEdge, ReadOnly, RisingEdge
 
 WRITES = [(0x1234, 0), (0xBEEF, 1), (0x0001, 127), (0xFFFF, 64)]
 
@@ -50,4 +50,18 @@ async def test_writes_then_reads_4_addresses(dut):
     for data, addr in WRITES:
         got = await read(dut, addr)
         assert got == data, f"addr {addr}: got {got:#06x}, want {data:#06x}"
-    assert dut.uio_oe.value == 0
+
+
+@cocotb.test()
+async def test_reset_releases_uio(dut):
+    cocotb.start_soon(Clock(dut.clk, 20, unit="ns").start())  # 50 MHz
+    dut.ena.value = 1
+    dut.ui_in.value = 0
+    dut.uio_in.value = 0
+    dut.rst_n.value = 0
+    for rst_n in [0] * 5 + [1] * 5:
+        await FallingEdge(dut.clk)
+        dut.rst_n.value = rst_n
+        await RisingEdge(dut.clk)
+        await ReadOnly()
+        assert dut.uio_oe.value == 0
