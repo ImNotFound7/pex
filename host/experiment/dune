@@ -1,0 +1,23 @@
+(library
+ (name pex_experiment)
+ (modules pex_experiment)
+ (libraries base yojson ppx_yojson_conv_lib)
+ (preprocess
+  (pps ppx_jane ppx_yojson_conv)))
+
+(executable
+ (name gen_spec)
+ (modules gen_spec)
+ (libraries base stdio yojson pex_experiment))
+
+(rule
+ (alias gen)
+ (action
+  (with-stdout-to
+   experiment.md.gen
+   (run ./gen_spec.exe))))
+
+(rule
+ (alias gen)
+ (action
+  (diff %{project_root}/spec/experiment.md experiment.md.gen)))

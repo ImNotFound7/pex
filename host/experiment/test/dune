@@ -1,0 +1,6 @@
+(library
+ (name test_pex_experiment)
+ (libraries base stdio pex_experiment yojson)
+ (inline_tests)
+ (preprocess
+  (pps ppx_jane)))
