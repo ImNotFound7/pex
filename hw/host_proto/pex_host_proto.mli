@@ -37,6 +37,11 @@ val ctrl_byte : ctrl -> int
 
 val ctrl_of_byte : int -> ctrl option
 
+(** Instruction memory depth in 16-bit words: the bound on the Write_mem /
+    Read_mem word address.  256 now; 128 if G1 picks the flip-flop fallback.
+    Fixed at G1; published in [spec/host.*]. *)
+val imem_depth : int
+
 (** [cmd; addr hi; addr lo; data...].  Raises on an address outside 0..0xFFFF
     or a data byte outside 0..255. *)
 val frame : cmd -> addr:int -> bytes:int list -> int list

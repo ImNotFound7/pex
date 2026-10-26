@@ -22,6 +22,7 @@
     { "name": "(Step 0)", "byte": 128 },
     { "name": "(Step 127)", "byte": 255 }
   ],
+  "imem_depth": 256,
   "fields": [
     {
       "name": "experiment_id",
@@ -51,7 +52,7 @@
       "width": 8,
       "access": "RW-halted",
       "reset": 0,
-      "doc": "Start address of the context."
+      "doc": "Start address (instruction word address) of ctx0."
     },
     {
       "name": "entry1",
@@ -61,7 +62,7 @@
       "width": 8,
       "access": "RW-halted",
       "reset": 0,
-      "doc": "Start address of the context."
+      "doc": "Start address (instruction word address) of ctx1."
     },
     {
       "name": "out_pin0.owner",
@@ -981,7 +982,7 @@
       "width": 1,
       "access": "RO-sticky",
       "reset": 0,
-      "doc": "ctx0: Fifo_push to a full RX FIFO; byte dropped."
+      "doc": "ctx0: host Fifo_push to a full RX FIFO (firmware-PULL side); byte dropped."
     },
     {
       "name": "flag.ctx0.host_pop_underflow",
@@ -991,7 +992,7 @@
       "width": 1,
       "access": "RO-sticky",
       "reset": 0,
-      "doc": "ctx0: Fifo_pop from an empty TX FIFO; 0x00 returned."
+      "doc": "ctx0: host Fifo_pop from an empty TX FIFO (firmware-PUSH side); 0x00 returned."
     },
     {
       "name": "flag.ctx1.event_overrun",
@@ -1021,7 +1022,7 @@
       "width": 1,
       "access": "RO-sticky",
       "reset": 0,
-      "doc": "ctx1: Fifo_push to a full RX FIFO; byte dropped."
+      "doc": "ctx1: host Fifo_push to a full RX FIFO (firmware-PULL side); byte dropped."
     },
     {
       "name": "flag.ctx1.host_pop_underflow",
@@ -1031,7 +1032,7 @@
       "width": 1,
       "access": "RO-sticky",
       "reset": 0,
-      "doc": "ctx1: Fifo_pop from an empty TX FIFO; 0x00 returned."
+      "doc": "ctx1: host Fifo_pop from an empty TX FIFO (firmware-PUSH side); 0x00 returned."
     },
     {
       "name": "rx_level.ctx0",
@@ -1041,7 +1042,7 @@
       "width": 8,
       "access": "RO",
       "reset": 0,
-      "doc": "ctx0 entries currently in the rx FIFO."
+      "doc": "ctx0 entries currently in the RX FIFO (host Fifo_push writes, firmware PULL reads)."
     },
     {
       "name": "tx_level.ctx0",
@@ -1051,7 +1052,7 @@
       "width": 8,
       "access": "RO",
       "reset": 0,
-      "doc": "ctx0 entries currently in the tx FIFO."
+      "doc": "ctx0 entries currently in the TX FIFO (firmware PUSH writes, host Fifo_pop drains)."
     },
     {
       "name": "trace_level.ctx0",
@@ -1071,7 +1072,7 @@
       "width": 8,
       "access": "RO",
       "reset": 0,
-      "doc": "ctx1 entries currently in the rx FIFO."
+      "doc": "ctx1 entries currently in the RX FIFO (host Fifo_push writes, firmware PULL reads)."
     },
     {
       "name": "tx_level.ctx1",
@@ -1081,7 +1082,7 @@
       "width": 8,
       "access": "RO",
       "reset": 0,
-      "doc": "ctx1 entries currently in the tx FIFO."
+      "doc": "ctx1 entries currently in the TX FIFO (firmware PUSH writes, host Fifo_pop drains)."
     },
     {
       "name": "trace_level.ctx1",
