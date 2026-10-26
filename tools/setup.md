@@ -31,3 +31,15 @@ Verify:
 ocaml -version; opam list hardcaml; iverilog -V | head -1; verilator --version; yosys -V; sby --help | head -1; .venv/bin/python -c "import cocotb; print(cocotb.__version__)"
 ```
 Notes: `iverilog -V` also prints "Unable to get version" lines to stderr; compile+run smoke test (iverilog + vvp) works. `--disable-sandboxing` is used because opam macOS sandbox is unavailable non-interactively.
+
+## Running the cocotb tests locally
+
+OSS CAD Suite's `vvp` wrapper forces the suite's own Python, so a plain `make` silently uses its bundled cocotb 2.1.0.dev0 instead of the pinned 2.1.0. Working invocation (from the repo root):
+```bash
+source ~/tools/oss-cad-suite/environment
+source .venv/bin/activate
+export PATH=$HOME/tools/oss-cad-suite/libexec:$PATH   # unwrapped iverilog/vvp first
+cd test && make        # not `make -C test`: it breaks the template Makefile
+```
+CI pins cocotb 2.0.1 (`test/requirements.txt`, the upstream template pin; 2.1.0 breaks the gl_test `grep failure` check, see `docs/log/G0-flow.md`). Locally 2.1.0 is fine.
+Check the log line `Initialized cocotb v2.1.0 from .../.venv/lib/python3.14/site-packages/cocotb`.
