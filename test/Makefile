@@ -7,6 +7,10 @@ FST ?= -fst # Use more efficient FST format
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
 PROJECT_SOURCES = project.v
+# PDK behavioural models of the SRAM macro (built with -DFUNCTIONAL)
+SRAM_MODELS = $(PWD)/models/RM_IHPSG13_1P_core_behavioral_bm_bist.v $(PWD)/models/RM_IHPSG13_1P_256x16_c2_bm_bist.v
+COMPILE_ARGS    += -DFUNCTIONAL
+VERILOG_SOURCES += $(SRAM_MODELS)
 
 ifneq ($(GATES),yes)
 

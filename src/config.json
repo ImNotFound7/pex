@@ -31,6 +31,55 @@
   "//": "https://tinytapeout.com/faq/#how-can-i-map-an-additional-external-clock-to-one-of-the-gpios",
   "CLOCK_PORT": "clk",
 
+  "//": "SRAM macro integration (G1 probe/sram). Recipe: urish/ttihp-sram-test, adapted to CMOS5L",
+  "//": "following 2AMLogic/sg13cmos5l-protocol-emulator (no TopMetal1 allowed; see src/pdn_cfg.tcl).",
+  "//": "Instance 'sram' is placed explicitly (the flow has no macro placer); 91.2 = 190 x 0.48 and",
+  "//": "173.88 = 46 x 3.78 are site multiples. The strap lattice below is matched to this location.",
+  "//": "vh: blackbox declaration for lint/Yosys (not in info.yaml source_files, which would make it",
+  "//": "a competing empty design module).",
+  "MACROS": {
+    "RM_IHPSG13_1P_256x16_c2_bm_bist": {
+      "instances": {
+        "sram": {
+          "location": [91.2, 173.88],
+          "orientation": "N"
+        }
+      },
+      "gds": [
+        "dir::../macro/RM_IHPSG13_1P_256x16_c2_bm_bist/RM_IHPSG13_1P_256x16_c2_bm_bist.gds"
+      ],
+      "lef": [
+        "dir::../macro/RM_IHPSG13_1P_256x16_c2_bm_bist/RM_IHPSG13_1P_256x16_c2_bm_bist.lef"
+      ],
+      "lib": {
+        "nom_*": [
+          "dir::../macro/RM_IHPSG13_1P_256x16_c2_bm_bist/RM_IHPSG13_1P_256x16_c2_bm_bist_typ_1p20V_25C.lib"
+        ],
+        "min_*": [
+          "dir::../macro/RM_IHPSG13_1P_256x16_c2_bm_bist/RM_IHPSG13_1P_256x16_c2_bm_bist_fast_1p32V_m55C.lib"
+        ],
+        "max_*": [
+          "dir::../macro/RM_IHPSG13_1P_256x16_c2_bm_bist/RM_IHPSG13_1P_256x16_c2_bm_bist_slow_1p08V_125C.lib"
+        ],
+        "*": [
+          "dir::../macro/RM_IHPSG13_1P_256x16_c2_bm_bist/RM_IHPSG13_1P_256x16_c2_bm_bist_typ_1p20V_25C.lib"
+        ]
+      },
+      "vh": [
+        "dir::RM_IHPSG13_1P_256x16_c2_bm_bist.v"
+      ]
+    }
+  },
+
+  "//": "Both macro supplies (VDD! logic, VDDARRAY! bit array) go to VPWR; VSS! to VGND.",
+  "PDN_MACRO_CONNECTIONS": [
+    "sram VPWR VGND VDD! VSS!",
+    "sram VPWR VGND VDDARRAY! VSS!"
+  ],
+
+  "//": "Custom PDN: Metal4 bridges onto the macro's Metal4 power stripes (see the file).",
+  "FP_PDN_CFG": "dir::pdn_cfg.tcl",
+
   "//": "Configuration docs: https://librelane.readthedocs.io/en/latest/reference/configuration.html",
 
   "//": "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",
@@ -58,8 +107,11 @@
   "FP_IO_HLENGTH": 2,
   "FP_IO_VLENGTH": 2,
 
-  "FP_PDN_VPITCH": 50.0,
+  "//": "probe/sram: pitch 50.0 -> 44.96 (= 4 x 11.24, the macro's same-net stripe pitch) and offset",
+  "//": "93.985 so no core strap overlaps an opposite-net SRAM bridge stripe (src/pdn_cfg.tcl).",
+  "FP_PDN_VPITCH": 44.96,
   "FP_PDN_VWIDTH": 2.1,
+  "FP_PDN_VOFFSET": 93.985,
 
   "//": "Clock",
   "RUN_CTS": 1,
