@@ -15,7 +15,7 @@ verilator: 5.053 devel rev v5.052-586-g1838b6ed0 (mod)
 yosys: 0.70+219 (git sha1 5053d0e26)
 sby: bundled in oss-cad-suite 2026-10-25 (no --version flag; `sby --help` works)
 python: 3.14.7 (.venv)
-cocotb: 2.1.0
+cocotb: CI 2.0.1 (test/requirements.txt, upstream template pin; needed because tt-gds-action gl_test runs `! grep failure results.xml` and 2.1.0 writes failures="0") / local 2.1.0 (2.0.1 does not build on Python 3.14). Revisit if upstream changes the gl_test check.
 pytest: 9.1.1
 
 # Flow pins (plan Global Constraints)
