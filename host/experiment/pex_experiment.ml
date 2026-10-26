@@ -141,9 +141,9 @@ let validate t =
       if v < 0 || v >= n then err "%s = %d: out of range 0..%d (image words)" name v (n - 1)));
   List.iteri t.script ~f:(fun i s ->
     let ctx v = range (Printf.sprintf "script[%d] context" i) 0 1 v in
-    let word v = range (Printf.sprintf "script[%d] word" i) 0 0xFFFF v in
+    let byte v = range (Printf.sprintf "script[%d] byte" i) 0 0xFF v in
     match s with
-    | Push (c, w) | Expect_pop (c, w) -> ctx c; word w
+    | Push (c, w) | Expect_pop (c, w) -> ctx c; byte w
     | Run_cycles n -> if n < 0 then err "script[%d] Run_cycles = %d: must be >= 0" i n
     | Expect_no_fault -> ());
   if List.is_empty !errs then Ok () else Error (List.rev !errs)

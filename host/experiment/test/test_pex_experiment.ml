@@ -38,7 +38,7 @@ let edges =
   ; experiment_id = 0xFFFF
   ; config = { base.config with trace_mode = Commits; entry = 3, 3 }
   ; script =
-      [ Push (1, 0xFFFF); Expect_pop (0, 0); Run_cycles 1_000_000; Expect_no_fault ]
+      [ Push (1, 0xFF); Expect_pop (0, 0); Push (0, 0); Expect_pop (1, 0xFF); Run_cycles 1_000_000; Expect_no_fault ]
   }
 ;;
 
@@ -149,7 +149,9 @@ let%test "validate: image" =
 
 let%test "validate: script" =
   has { base with script = [ Push (2, 0) ] } "script[0] context = 2"
-  && has { base with script = [ Expect_no_fault; Expect_pop (0, 0x10000) ] } "script[1] word = 65536"
+  && has { base with script = [ Expect_no_fault; Expect_pop (0, 256) ] } "script[1] byte = 256"
+  && has { base with script = [ Push (1, 256) ] } "script[0] byte = 256"
+  && has { base with script = [ Push (0, -1) ] } "byte = -1"
   && has { base with script = [ Run_cycles (-1) ] } "script[0] Run_cycles"
 ;;
 

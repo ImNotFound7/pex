@@ -101,8 +101,8 @@ Output pin index (the position in `outputs`): 0-7 = `uio[0..7]`, 8-14 = `uo_out[
 
 | encoding | meaning |
 |---|---|
-| `["Push", ctx, word]` | push `word` (0..65535) into the host-to-chip FIFO of context ctx |
-| `["Expect_pop", ctx, word]` | pop the chip-to-host FIFO of ctx and expect `word` (0..65535) |
+| `["Push", ctx, byte]` | push `byte` (0..255) into the host-to-chip (TX) FIFO of context ctx |
+| `["Expect_pop", ctx, byte]` | pop the chip-to-host (RX) FIFO of ctx (FIFOs are 8 bits wide) and expect `byte` (0..255) |
 | `["Run_cycles", n]` | run n core cycles, n >= 0 |
 | `["Expect_no_fault"]` | expect that no fault is set |
 

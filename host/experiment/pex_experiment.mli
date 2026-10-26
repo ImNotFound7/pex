@@ -44,8 +44,8 @@ type config =
 [@@deriving sexp_of, equal]
 
 type step =
-  | Push of int * int (** context, 16-bit word *)
-  | Expect_pop of int * int (** context, expected 16-bit word *)
+  | Push of int * int (** context, byte 0..255 *)
+  | Expect_pop of int * int (** context, expected byte 0..255 *)
   | Run_cycles of int
   | Expect_no_fault
 [@@deriving sexp_of, equal]
