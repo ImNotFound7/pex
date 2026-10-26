@@ -29,7 +29,8 @@ let max_samples =
     ; [ Ssl; Ssr; Wait; Sync; Ret; Halt; Wait_imm 4095; Wait_param 3 ]
     ; List.concat_map [ true; false ] ~f:(fun sample ->
         [ At_imm { sample; offset = 2047 }; At_param { sample; p = 3 } ])
-    ; List.concat_map [ Disarm; Rise; Fall; Either; High; Low ] ~f:(fun e ->
+    ; [ Arm (0, Disarm) ]
+    ; List.concat_map [ Rise; Fall; Either; High; Low ] ~f:(fun e ->
         [ Arm (0, e); Arm (7, e) ])
     ; [ Fault 15; Mark 255 ]
     ; List.concat_map [ Lo; Hi ] ~f:(fun h -> [ Ldp (R3, 3, h); Ldp (R0, 0, h) ])
@@ -51,6 +52,16 @@ let%expect_test "range errors" =
     ; Jump (Always, 256)
     ; Fault 16
     ; Wait_imm (-1)
+    ; Wait_imm 4096
+    ; Cmpi (R0, 256)
+    ; Djnz (R0, 256)
+    ; Stg_imm (Out, 256)
+    ; Mark 256
+    ; Outl 8
+    ; Inb 8
+    ; Inr 8
+    ; At_param { sample = false; p = 4 }
+    ; Arm (1, Disarm)
     ; Wait_param 4
     ; Arm (8, Rise)
     ; Ldp (R0, 4, Lo)
@@ -64,6 +75,16 @@ let%expect_test "range errors" =
     (Error "jump: addr 256 out of range 0..255")
     (Error "fault: code 16 out of range 0..15")
     (Error "wait: t -1 out of range 0..4095")
+    (Error "wait: t 4096 out of range 0..4095")
+    (Error "cmpi: imm 256 out of range 0..255")
+    (Error "djnz: addr 256 out of range 0..255")
+    (Error "stg: imm 256 out of range 0..255")
+    (Error "mark: imm 256 out of range 0..255")
+    (Error "outl: j 8 out of range 0..7")
+    (Error "inb: j 8 out of range 0..7")
+    (Error "inr: j 8 out of range 0..7")
+    (Error "at: p 4 out of range 0..3")
+    (Error "arm: j must be 0 when edge is none")
     (Error "wait: p 4 out of range 0..3")
     (Error "arm: j 8 out of range 0..7")
     (Error "ldp: p 4 out of range 0..3")
@@ -76,10 +97,10 @@ let%expect_test "illegal opcodes" =
     [%sexp
       (List.map
          [ 0xB000; 0xF123; 0x0100; 0x2900; 0x2770; 0x2710; 0x5C00; 0x600B; 0x6003; 0x6308
-         ; 0x9B00; 0x9406; 0x9000 lor 0x20; -1; 0x10000 ]
+         ; 0x9B00; 0x9406; 0x9410; 0x9470; 0x9000 lor 0x20; -1; 0x10000 ]
          ~f:decode
        : t option list)];
-  [%expect {| (() () () () () () () () () () () () () () ()) |}]
+  [%expect {| (() () () () () () () () () () () () () () () () ()) |}]
 ;;
 
 let%expect_test "to_string" =
@@ -89,7 +110,6 @@ let%expect_test "to_string" =
     ; At_param { sample = true; p = 0 }
     ; Arm (3, Fall)
     ; Arm (0, Disarm)
-    ; Arm (2, Disarm)
     ; Ldp (R1, 2, Hi)
     ; Stg_imm (Out, 0x55)
     ; Stg_reg (Oe, R2)
@@ -112,7 +132,6 @@ let%expect_test "to_string" =
     at p0, sample
     arm 3, fall
     arm none
-    arm 2, none
     ldp r1, p2.hi
     stg out, 0x55
     stg oe, r2
@@ -171,11 +190,66 @@ let json_mnemonic w e =
     List.Assoc.find_exn tbl v ~equal:Int.equal
 ;;
 
+let idx all eq x = fst (List.findi_exn all ~f:(fun _ y -> eq x y))
+let r = idx all_of_reg equal_reg
+
+(* Entry id and field values that the JSON-extracted decode must report. *)
+let expected = function
+  | Ldi (x, i) -> "ldi", [ "r", r x; "imm", i ]
+  | Cmpi (x, i) -> "cmpi", [ "r", r x; "imm", i ]
+  | Alu ((Shl | Shr) as a, rd, _) -> "shift", [ "alu", idx all_of_alu equal_alu a; "rd", r rd ]
+  | Alu (a, rd, rs) -> "alu", [ "alu", idx all_of_alu equal_alu a; "rd", r rd; "rs", r rs ]
+  | Jump (c, a) -> "jump", [ "cond", idx all_of_cond equal_cond c; "addr", a ]
+  | Djnz (x, a) -> "djnz", [ "r", r x; "addr", a ]
+  | Stg_imm (f, i) -> "stg_imm", [ "field", idx all_of_field equal_field f; "imm", i ]
+  | Stg_reg (f, x) -> "stg_reg", [ "field", idx all_of_field equal_field f; "r", r x ]
+  | Outb j -> "outb", [ "j", j ]
+  | Outl j -> "outl", [ "j", j ]
+  | Inb j -> "inb", [ "j", j ]
+  | Inr j -> "inr", [ "j", j ]
+  | Ldsr x -> "ldsr", [ "r", r x ]
+  | Stsr x -> "stsr", [ "r", r x ]
+  | Ssl -> "ssl", []
+  | Ssr -> "ssr", []
+  | At_imm { sample; offset } -> "at_imm", [ "sample", Bool.to_int sample; "offset", offset ]
+  | At_param { sample; p } -> "at_param", [ "sample", Bool.to_int sample; "p", p ]
+  | Wait -> "wait", []
+  | Wait_imm t -> "wait_imm", [ "t", t ]
+  | Wait_param p -> "wait_param", [ "p", p ]
+  | Sync -> "sync", []
+  | Arm (_, Disarm) -> "disarm", []
+  | Arm (j, e) -> "arm", [ "j", j; "edge", idx all_of_edge equal_edge e ]
+  | Ret -> "ret", []
+  | Halt -> "halt", []
+  | Fault c -> "fault", [ "c", c ]
+  | Push x -> "push", [ "r", r x ]
+  | Pull x -> "pull", [ "r", r x ]
+  | Ldp (x, p, h) -> "ldp", [ "r", r x; "half", idx all_of_half equal_half h; "p", p ]
+  | Mark i -> "mark", [ "imm", i ]
+;;
+
+let json_fields w e =
+  e |> J.member "fields" |> J.to_list
+  |> List.map ~f:(fun x ->
+    ( x |> J.member "name" |> J.to_string
+    , (w lsr int_of x "lo") land ((1 lsl (int_of x "hi" - int_of x "lo" + 1)) - 1) ))
+;;
+
+let sort = List.sort ~compare:[%compare: string * int]
+
 let%test "JSON-only decoder agrees with Pex_isa.decode on all 65536 words" =
   List.for_all (List.init 65536 ~f:Fn.id) ~f:(fun w ->
     match json_decode w, decode w with
     | [], None -> true
     | [ e ], Some i ->
+      let id, ops = expected i in
       String.equal (json_mnemonic w e) (List.hd_exn (String.split (to_string i) ~on:' '))
+      && String.equal id (e |> J.member "id" |> J.to_string)
+      && [%equal: (string * int) list] (sort ops) (sort (json_fields w e))
     | _ -> false)
+;;
+
+let%expect_test "legal word count" =
+  printf "%d\n" (List.count (List.init 65536 ~f:Fn.id) ~f:(fun w -> Option.is_some (decode w)));
+  [%expect {| 14623 |}]
 ;;

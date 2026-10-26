@@ -161,6 +161,10 @@ let encode t =
     let%map p = chk "wait" "p" p 3 in
     word 0x9 2 p
   | Sync -> Ok (word 0x9 3 0)
+  | Arm (j, Disarm) ->
+    if j = 0
+    then Ok (word 0x9 4 0)
+    else Error "arm: j must be 0 when edge is none"
   | Arm (j, e) ->
     let%map j = chk "arm" "j" j 7 in
     word 0x9 4 ((j lsl 4) lor edge_i e)
@@ -232,6 +236,7 @@ let decode w =
        | 3 -> z 0x00FF Sync
        | 4 ->
          (match bits w 2 0 with
+          | 0 -> z 0x00FF (Arm (0, Disarm))
           | e when e > 5 -> None
           | e -> z 0x0088 (Arm (bits w 6 4, List.nth_exn all_of_edge e)))
        | 5 -> z 0x00FF Ret
@@ -276,7 +281,7 @@ let to_string t =
   | Wait_imm n -> sprintf "wait +%d" n
   | Wait_param p -> sprintf "wait p%d" p
   | Sync -> "sync"
-  | Arm (0, Disarm) -> "arm none"
+  | Arm (_, Disarm) -> "arm none"
   | Arm (j, e) -> sprintf "arm %d, %s" j (name_of edge_names (edge_i e))
   | Ret -> "ret"
   | Halt -> "halt"
@@ -373,11 +378,11 @@ let entries =
   ; sys 2 "wait_param" "wait pN" 0x9 [ f "p" 1 0 Param ]
       ~semantics:"Wait for the armed event with timeout REF + parameter register pN."
   ; sys 3 "sync" "sync" 0x9 [] ~semantics:"REF <- execute cycle."
-  ; sys 4 "arm" "arm j, edge | arm none" 0x9
-      [ f "j" 6 4 Uimm; f "edge" 2 0 (Enum ("edge", range 0 5)) ]
-      ~semantics:
-        "Arm the event condition on logical input j. Edge 0 (none) disarms; the assembler \
-         spells it `arm none` (j = 0)."
+  ; sys 4 "disarm" "arm none" 0x9 []
+      ~semantics:"Disarm the event condition. Bits 7:0 must be 0 (j = 0)."
+  ; sys 4 "arm" "arm j, edge" 0x9
+      [ f "j" 6 4 Uimm; f "edge" 2 0 (Enum ("edge", range 1 5)) ]
+      ~semantics:"Arm the event condition on logical input j with the given edge/level."
   ; sys 5 "ret" "ret" 0x9 [] ~semantics:"Return from call (1-deep)."
   ; sys 6 "halt" "halt" 0x9 [] ~semantics:"Halt the context."
   ; sys 7 "fault" "fault c" 0x9 [ f "c" 3 0 Uimm ] ~semantics:"Raise fault code c."

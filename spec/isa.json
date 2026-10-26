@@ -481,10 +481,23 @@
       "semantics": "REF <- execute cycle."
     },
     {
+      "id": "disarm",
+      "mnemonic": "arm",
+      "mnemonic_from": null,
+      "syntax": "arm none",
+      "op": 9,
+      "sub": { "hi": 11, "lo": 8, "value": 4 },
+      "fields": [],
+      "match_mask": 65280,
+      "match_value": 37888,
+      "must_be_zero_mask": 255,
+      "semantics": "Disarm the event condition. Bits 7:0 must be 0 (j = 0)."
+    },
+    {
       "id": "arm",
       "mnemonic": "arm",
       "mnemonic_from": null,
-      "syntax": "arm j, edge | arm none",
+      "syntax": "arm j, edge",
       "op": 9,
       "sub": { "hi": 11, "lo": 8, "value": 4 },
       "fields": [
@@ -494,16 +507,16 @@
           "hi": 2,
           "lo": 0,
           "kind": "enum",
-          "min": 0,
+          "min": 1,
           "max": 5,
           "table": "edge",
-          "values": [ 0, 1, 2, 3, 4, 5 ]
+          "values": [ 1, 2, 3, 4, 5 ]
         }
       ],
       "match_mask": 65280,
       "match_value": 37888,
       "must_be_zero_mask": 136,
-      "semantics": "Arm the event condition on logical input j. Edge 0 (none) disarms; the assembler spells it `arm none` (j = 0)."
+      "semantics": "Arm the event condition on logical input j with the given edge/level."
     },
     {
       "id": "ret",

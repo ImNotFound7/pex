@@ -90,7 +90,7 @@ type t =
 [@@deriving sexp, equal]
 
 (** [Error] names the offending operand and its valid range; operands are never
-    masked or truncated.  [Alu (Shl|Shr, _, rs)] requires [rs = R0]. *)
+    masked or truncated.  [Alu (Shl|Shr, _, rs)] requires [rs = R0]; [Arm (j, Disarm)] requires [j = 0]. *)
 val encode : t -> (int, string) result
 
 (** [None] means ILLEGAL: undefined opcode/sub-opcode/enum value, or any
@@ -100,8 +100,7 @@ val decode : int -> t option
 
 (** Assembler syntax.  Jump/djnz addresses and 8-bit immediates print as 0x
     hex; counts, offsets, bit indices and parameter numbers print in decimal.
-    [Arm (0, Disarm)] prints [arm none]; any other [Disarm] prints
-    [arm J, none] so that no information is lost. *)
+    [Arm (_, Disarm)] prints [arm none]. *)
 val to_string : t -> string
 
 val spec_json : unit -> Yojson.Safe.t

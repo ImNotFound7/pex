@@ -30,7 +30,8 @@ A 16-bit word is legal iff exactly one instruction entry matches: (w & match_mas
 | wait | `wait` | 0x9 | 1 | - | 0x00FF | Wait for the armed event, no timeout. |
 | wait_param | `wait pN` | 0x9 | 2 | p[1:0] (0..3) | 0x00FC | Wait for the armed event with timeout REF + parameter register pN. |
 | sync | `sync` | 0x9 | 3 | - | 0x00FF | REF <- execute cycle. |
-| arm | `arm j, edge | arm none` | 0x9 | 4 | j[6:4] (0..7), edge[2:0] (edge 0,1,2,3,4,5) | 0x0088 | Arm the event condition on logical input j. Edge 0 (none) disarms; the assembler spells it `arm none` (j = 0). |
+| disarm | `arm none` | 0x9 | 4 | - | 0x00FF | Disarm the event condition. Bits 7:0 must be 0 (j = 0). |
+| arm | `arm j, edge` | 0x9 | 4 | j[6:4] (0..7), edge[2:0] (edge 1,2,3,4,5) | 0x0088 | Arm the event condition on logical input j with the given edge/level. |
 | ret | `ret` | 0x9 | 5 | - | 0x00FF | Return from call (1-deep). |
 | halt | `halt` | 0x9 | 6 | - | 0x00FF | Halt the context. |
 | fault | `fault c` | 0x9 | 7 | c[3:0] (0..15) | 0x00F0 | Raise fault code c. |
