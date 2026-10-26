@@ -1,0 +1,17 @@
+(executable
+ (name gen)
+ (libraries base hardcaml pex_top)
+ (preprocess
+  (pps ppx_jane)))
+
+(rule
+ (alias gen)
+ (action
+  (with-stdout-to
+   project.v.gen
+   (run ./gen.exe))))
+
+(rule
+ (alias gen)
+ (action
+  (diff %{project_root}/src/project.v project.v.gen)))
