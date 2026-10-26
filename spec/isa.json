@@ -1,0 +1,691 @@
+{
+  "version": "v0",
+  "word_bits": 16,
+  "decode_rule": "A 16-bit word is legal iff exactly one instruction entry matches: (w & match_mask) == match_value, (w & must_be_zero_mask) == 0, and every field value is within its min..max (enum fields: within `values`). Everything else, including op 0xB-0xF and every unassigned enum value, is ILLEGAL. Field value = (w >> lo) & ((1 << (hi-lo+1)) - 1). When mnemonic_from is set the mnemonic is that field's enum table name.",
+  "illegal_ops": [ 11, 12, 13, 14, 15 ],
+  "instructions": [
+    {
+      "id": "ldi",
+      "mnemonic": "ldi",
+      "mnemonic_from": null,
+      "syntax": "ldi r, imm",
+      "op": 0,
+      "sub": null,
+      "fields": [
+        {
+          "name": "r",
+          "hi": 11,
+          "lo": 10,
+          "kind": "reg",
+          "min": 0,
+          "max": 3
+        },
+        {
+          "name": "imm",
+          "hi": 7,
+          "lo": 0,
+          "kind": "uimm",
+          "min": 0,
+          "max": 255
+        }
+      ],
+      "match_mask": 61440,
+      "match_value": 0,
+      "must_be_zero_mask": 768,
+      "semantics": "r <- imm."
+    },
+    {
+      "id": "cmpi",
+      "mnemonic": "cmpi",
+      "mnemonic_from": null,
+      "syntax": "cmpi r, imm",
+      "op": 1,
+      "sub": null,
+      "fields": [
+        {
+          "name": "r",
+          "hi": 11,
+          "lo": 10,
+          "kind": "reg",
+          "min": 0,
+          "max": 3
+        },
+        {
+          "name": "imm",
+          "hi": 7,
+          "lo": 0,
+          "kind": "uimm",
+          "min": 0,
+          "max": 255
+        }
+      ],
+      "match_mask": 61440,
+      "match_value": 4096,
+      "must_be_zero_mask": 768,
+      "semantics": "Sets Z and C as for sub (r - imm), without writing r."
+    },
+    {
+      "id": "alu",
+      "mnemonic": null,
+      "mnemonic_from": "alu",
+      "syntax": "<alu> rd, rs",
+      "op": 2,
+      "sub": null,
+      "fields": [
+        {
+          "name": "alu",
+          "hi": 11,
+          "lo": 8,
+          "kind": "enum",
+          "min": 0,
+          "max": 6,
+          "table": "alu",
+          "values": [ 0, 1, 2, 3, 4, 5, 6 ]
+        },
+        { "name": "rd", "hi": 7, "lo": 6, "kind": "reg", "min": 0, "max": 3 },
+        { "name": "rs", "hi": 5, "lo": 4, "kind": "reg", "min": 0, "max": 3 }
+      ],
+      "match_mask": 61440,
+      "match_value": 8192,
+      "must_be_zero_mask": 15,
+      "semantics": "rd <- rd <alu> rs. cmp sets Z and C as for sub, without writing rd."
+    },
+    {
+      "id": "shift",
+      "mnemonic": null,
+      "mnemonic_from": "alu",
+      "syntax": "<shl|shr> rd",
+      "op": 2,
+      "sub": null,
+      "fields": [
+        {
+          "name": "alu",
+          "hi": 11,
+          "lo": 8,
+          "kind": "enum",
+          "min": 7,
+          "max": 8,
+          "table": "alu",
+          "values": [ 7, 8 ]
+        },
+        { "name": "rd", "hi": 7, "lo": 6, "kind": "reg", "min": 0, "max": 3 }
+      ],
+      "match_mask": 61440,
+      "match_value": 8192,
+      "must_be_zero_mask": 63,
+      "semantics": "shl: C <- rd[7], rd <- rd << 1. shr: C <- rd[0], rd <- rd >> 1. Bits 5:4 (rs) must be 0."
+    },
+    {
+      "id": "jump",
+      "mnemonic": null,
+      "mnemonic_from": "cond",
+      "syntax": "<cond> addr",
+      "op": 3,
+      "sub": null,
+      "fields": [
+        {
+          "name": "cond",
+          "hi": 10,
+          "lo": 8,
+          "kind": "enum",
+          "min": 0,
+          "max": 7,
+          "table": "cond",
+          "values": [ 0, 1, 2, 3, 4, 5, 6, 7 ]
+        },
+        {
+          "name": "addr",
+          "hi": 7,
+          "lo": 0,
+          "kind": "uimm",
+          "min": 0,
+          "max": 255
+        }
+      ],
+      "match_mask": 61440,
+      "match_value": 12288,
+      "must_be_zero_mask": 2048,
+      "semantics": "Jump to addr if the condition holds; call also saves the return address (1-deep)."
+    },
+    {
+      "id": "djnz",
+      "mnemonic": "djnz",
+      "mnemonic_from": null,
+      "syntax": "djnz r, addr",
+      "op": 4,
+      "sub": null,
+      "fields": [
+        {
+          "name": "r",
+          "hi": 11,
+          "lo": 10,
+          "kind": "reg",
+          "min": 0,
+          "max": 3
+        },
+        {
+          "name": "addr",
+          "hi": 7,
+          "lo": 0,
+          "kind": "uimm",
+          "min": 0,
+          "max": 255
+        }
+      ],
+      "match_mask": 61440,
+      "match_value": 16384,
+      "must_be_zero_mask": 768,
+      "semantics": "r <- r - 1; jump to addr if the new r is non-zero. Flags unchanged."
+    },
+    {
+      "id": "stg_imm",
+      "mnemonic": "stg",
+      "mnemonic_from": null,
+      "syntax": "stg field, imm",
+      "op": 5,
+      "sub": null,
+      "fields": [
+        {
+          "name": "field",
+          "hi": 11,
+          "lo": 10,
+          "kind": "enum",
+          "min": 0,
+          "max": 2,
+          "table": "field",
+          "values": [ 0, 1, 2 ]
+        },
+        {
+          "name": "imm",
+          "hi": 7,
+          "lo": 0,
+          "kind": "uimm",
+          "min": 0,
+          "max": 255
+        }
+      ],
+      "match_mask": 61440,
+      "match_value": 20480,
+      "must_be_zero_mask": 768,
+      "semantics": "Stage the out / oe / mask register from imm. No timing effect."
+    },
+    {
+      "id": "stg_reg",
+      "mnemonic": "stg",
+      "mnemonic_from": null,
+      "syntax": "stg field, r",
+      "op": 6,
+      "sub": null,
+      "fields": [
+        {
+          "name": "field",
+          "hi": 11,
+          "lo": 8,
+          "kind": "enum",
+          "min": 0,
+          "max": 2,
+          "table": "field",
+          "values": [ 0, 1, 2 ]
+        },
+        { "name": "r", "hi": 7, "lo": 6, "kind": "reg", "min": 0, "max": 3 }
+      ],
+      "match_mask": 61440,
+      "match_value": 24576,
+      "must_be_zero_mask": 63,
+      "semantics": "Stage the out / oe / mask register from r. No timing effect."
+    },
+    {
+      "id": "outb",
+      "mnemonic": "outb",
+      "mnemonic_from": null,
+      "syntax": "outb j",
+      "op": 6,
+      "sub": { "hi": 11, "lo": 8, "value": 3 },
+      "fields": [
+        { "name": "j", "hi": 2, "lo": 0, "kind": "uimm", "min": 0, "max": 7 }
+      ],
+      "match_mask": 65280,
+      "match_value": 25344,
+      "must_be_zero_mask": 248,
+      "semantics": "staged out[j] <- SR[7]; SR unchanged (no shift)."
+    },
+    {
+      "id": "outl",
+      "mnemonic": "outl",
+      "mnemonic_from": null,
+      "syntax": "outl j",
+      "op": 6,
+      "sub": { "hi": 11, "lo": 8, "value": 4 },
+      "fields": [
+        { "name": "j", "hi": 2, "lo": 0, "kind": "uimm", "min": 0, "max": 7 }
+      ],
+      "match_mask": 65280,
+      "match_value": 25600,
+      "must_be_zero_mask": 248,
+      "semantics": "staged out[j] <- SR[0]; SR unchanged (no shift)."
+    },
+    {
+      "id": "inb",
+      "mnemonic": "inb",
+      "mnemonic_from": null,
+      "syntax": "inb j",
+      "op": 6,
+      "sub": { "hi": 11, "lo": 8, "value": 5 },
+      "fields": [
+        { "name": "j", "hi": 2, "lo": 0, "kind": "uimm", "min": 0, "max": 7 }
+      ],
+      "match_mask": 65280,
+      "match_value": 25856,
+      "must_be_zero_mask": 248,
+      "semantics": "SR <- (SR << 1) | SAMPLE[j]."
+    },
+    {
+      "id": "inr",
+      "mnemonic": "inr",
+      "mnemonic_from": null,
+      "syntax": "inr j",
+      "op": 6,
+      "sub": { "hi": 11, "lo": 8, "value": 6 },
+      "fields": [
+        { "name": "j", "hi": 2, "lo": 0, "kind": "uimm", "min": 0, "max": 7 }
+      ],
+      "match_mask": 65280,
+      "match_value": 26112,
+      "must_be_zero_mask": 248,
+      "semantics": "SR <- (SAMPLE[j] << 7) | (SR >> 1)."
+    },
+    {
+      "id": "ldsr",
+      "mnemonic": "ldsr",
+      "mnemonic_from": null,
+      "syntax": "ldsr r",
+      "op": 6,
+      "sub": { "hi": 11, "lo": 8, "value": 7 },
+      "fields": [
+        { "name": "r", "hi": 7, "lo": 6, "kind": "reg", "min": 0, "max": 3 }
+      ],
+      "match_mask": 65280,
+      "match_value": 26368,
+      "must_be_zero_mask": 63,
+      "semantics": "SR <- r."
+    },
+    {
+      "id": "stsr",
+      "mnemonic": "stsr",
+      "mnemonic_from": null,
+      "syntax": "stsr r",
+      "op": 6,
+      "sub": { "hi": 11, "lo": 8, "value": 8 },
+      "fields": [
+        { "name": "r", "hi": 7, "lo": 6, "kind": "reg", "min": 0, "max": 3 }
+      ],
+      "match_mask": 65280,
+      "match_value": 26624,
+      "must_be_zero_mask": 63,
+      "semantics": "r <- SR."
+    },
+    {
+      "id": "ssl",
+      "mnemonic": "ssl",
+      "mnemonic_from": null,
+      "syntax": "ssl",
+      "op": 6,
+      "sub": { "hi": 11, "lo": 8, "value": 9 },
+      "fields": [],
+      "match_mask": 65280,
+      "match_value": 26880,
+      "must_be_zero_mask": 255,
+      "semantics": "SR <- SR << 1, zero fill."
+    },
+    {
+      "id": "ssr",
+      "mnemonic": "ssr",
+      "mnemonic_from": null,
+      "syntax": "ssr",
+      "op": 6,
+      "sub": { "hi": 11, "lo": 8, "value": 10 },
+      "fields": [],
+      "match_mask": 65280,
+      "match_value": 27136,
+      "must_be_zero_mask": 255,
+      "semantics": "SR <- SR >> 1, zero fill."
+    },
+    {
+      "id": "at_imm",
+      "mnemonic": "at",
+      "mnemonic_from": null,
+      "syntax": "at +n[, sample]",
+      "op": 7,
+      "sub": null,
+      "fields": [
+        {
+          "name": "sample",
+          "hi": 11,
+          "lo": 11,
+          "kind": "flag",
+          "min": 0,
+          "max": 1
+        },
+        {
+          "name": "offset",
+          "hi": 10,
+          "lo": 0,
+          "kind": "uimm",
+          "min": 0,
+          "max": 2047
+        }
+      ],
+      "match_mask": 61440,
+      "match_value": 28672,
+      "must_be_zero_mask": 0,
+      "semantics": "Timed action at REF + n (spec 4.2); sample flag loads SAMPLE on commit."
+    },
+    {
+      "id": "wait_imm",
+      "mnemonic": "wait",
+      "mnemonic_from": null,
+      "syntax": "wait +t",
+      "op": 8,
+      "sub": null,
+      "fields": [
+        {
+          "name": "t",
+          "hi": 11,
+          "lo": 0,
+          "kind": "uimm",
+          "min": 0,
+          "max": 4095
+        }
+      ],
+      "match_mask": 61440,
+      "match_value": 32768,
+      "must_be_zero_mask": 0,
+      "semantics": "Wait for the armed event with timeout T = REF + t (spec 4.4)."
+    },
+    {
+      "id": "at_param",
+      "mnemonic": "at",
+      "mnemonic_from": null,
+      "syntax": "at pN[, sample]",
+      "op": 9,
+      "sub": { "hi": 11, "lo": 8, "value": 0 },
+      "fields": [
+        {
+          "name": "sample",
+          "hi": 4,
+          "lo": 4,
+          "kind": "flag",
+          "min": 0,
+          "max": 1
+        },
+        {
+          "name": "p",
+          "hi": 1,
+          "lo": 0,
+          "kind": "param",
+          "min": 0,
+          "max": 3
+        }
+      ],
+      "match_mask": 65280,
+      "match_value": 36864,
+      "must_be_zero_mask": 236,
+      "semantics": "Timed action at REF + parameter register pN."
+    },
+    {
+      "id": "wait",
+      "mnemonic": "wait",
+      "mnemonic_from": null,
+      "syntax": "wait",
+      "op": 9,
+      "sub": { "hi": 11, "lo": 8, "value": 1 },
+      "fields": [],
+      "match_mask": 65280,
+      "match_value": 37120,
+      "must_be_zero_mask": 255,
+      "semantics": "Wait for the armed event, no timeout."
+    },
+    {
+      "id": "wait_param",
+      "mnemonic": "wait",
+      "mnemonic_from": null,
+      "syntax": "wait pN",
+      "op": 9,
+      "sub": { "hi": 11, "lo": 8, "value": 2 },
+      "fields": [
+        {
+          "name": "p",
+          "hi": 1,
+          "lo": 0,
+          "kind": "param",
+          "min": 0,
+          "max": 3
+        }
+      ],
+      "match_mask": 65280,
+      "match_value": 37376,
+      "must_be_zero_mask": 252,
+      "semantics": "Wait for the armed event with timeout REF + parameter register pN."
+    },
+    {
+      "id": "sync",
+      "mnemonic": "sync",
+      "mnemonic_from": null,
+      "syntax": "sync",
+      "op": 9,
+      "sub": { "hi": 11, "lo": 8, "value": 3 },
+      "fields": [],
+      "match_mask": 65280,
+      "match_value": 37632,
+      "must_be_zero_mask": 255,
+      "semantics": "REF <- execute cycle."
+    },
+    {
+      "id": "arm",
+      "mnemonic": "arm",
+      "mnemonic_from": null,
+      "syntax": "arm j, edge | arm none",
+      "op": 9,
+      "sub": { "hi": 11, "lo": 8, "value": 4 },
+      "fields": [
+        { "name": "j", "hi": 6, "lo": 4, "kind": "uimm", "min": 0, "max": 7 },
+        {
+          "name": "edge",
+          "hi": 2,
+          "lo": 0,
+          "kind": "enum",
+          "min": 0,
+          "max": 5,
+          "table": "edge",
+          "values": [ 0, 1, 2, 3, 4, 5 ]
+        }
+      ],
+      "match_mask": 65280,
+      "match_value": 37888,
+      "must_be_zero_mask": 136,
+      "semantics": "Arm the event condition on logical input j. Edge 0 (none) disarms; the assembler spells it `arm none` (j = 0)."
+    },
+    {
+      "id": "ret",
+      "mnemonic": "ret",
+      "mnemonic_from": null,
+      "syntax": "ret",
+      "op": 9,
+      "sub": { "hi": 11, "lo": 8, "value": 5 },
+      "fields": [],
+      "match_mask": 65280,
+      "match_value": 38144,
+      "must_be_zero_mask": 255,
+      "semantics": "Return from call (1-deep)."
+    },
+    {
+      "id": "halt",
+      "mnemonic": "halt",
+      "mnemonic_from": null,
+      "syntax": "halt",
+      "op": 9,
+      "sub": { "hi": 11, "lo": 8, "value": 6 },
+      "fields": [],
+      "match_mask": 65280,
+      "match_value": 38400,
+      "must_be_zero_mask": 255,
+      "semantics": "Halt the context."
+    },
+    {
+      "id": "fault",
+      "mnemonic": "fault",
+      "mnemonic_from": null,
+      "syntax": "fault c",
+      "op": 9,
+      "sub": { "hi": 11, "lo": 8, "value": 7 },
+      "fields": [
+        {
+          "name": "c",
+          "hi": 3,
+          "lo": 0,
+          "kind": "uimm",
+          "min": 0,
+          "max": 15
+        }
+      ],
+      "match_mask": 65280,
+      "match_value": 38656,
+      "must_be_zero_mask": 240,
+      "semantics": "Raise fault code c."
+    },
+    {
+      "id": "push",
+      "mnemonic": "push",
+      "mnemonic_from": null,
+      "syntax": "push r",
+      "op": 9,
+      "sub": { "hi": 11, "lo": 8, "value": 8 },
+      "fields": [
+        { "name": "r", "hi": 7, "lo": 6, "kind": "reg", "min": 0, "max": 3 }
+      ],
+      "match_mask": 65280,
+      "match_value": 38912,
+      "must_be_zero_mask": 63,
+      "semantics": "Push r to the host FIFO."
+    },
+    {
+      "id": "pull",
+      "mnemonic": "pull",
+      "mnemonic_from": null,
+      "syntax": "pull r",
+      "op": 9,
+      "sub": { "hi": 11, "lo": 8, "value": 9 },
+      "fields": [
+        { "name": "r", "hi": 7, "lo": 6, "kind": "reg", "min": 0, "max": 3 }
+      ],
+      "match_mask": 65280,
+      "match_value": 39168,
+      "must_be_zero_mask": 63,
+      "semantics": "Pull from the host FIFO into r (blocks)."
+    },
+    {
+      "id": "ldp",
+      "mnemonic": "ldp",
+      "mnemonic_from": null,
+      "syntax": "ldp r, pN.lo|hi",
+      "op": 9,
+      "sub": { "hi": 11, "lo": 8, "value": 10 },
+      "fields": [
+        { "name": "r", "hi": 7, "lo": 6, "kind": "reg", "min": 0, "max": 3 },
+        {
+          "name": "half",
+          "hi": 4,
+          "lo": 4,
+          "kind": "enum",
+          "min": 0,
+          "max": 1,
+          "table": "half",
+          "values": [ 0, 1 ]
+        },
+        {
+          "name": "p",
+          "hi": 1,
+          "lo": 0,
+          "kind": "param",
+          "min": 0,
+          "max": 3
+        }
+      ],
+      "match_mask": 65280,
+      "match_value": 39424,
+      "must_be_zero_mask": 44,
+      "semantics": "r <- low or high byte of parameter register pN."
+    },
+    {
+      "id": "mark",
+      "mnemonic": "mark",
+      "mnemonic_from": null,
+      "syntax": "mark imm",
+      "op": 10,
+      "sub": null,
+      "fields": [
+        {
+          "name": "imm",
+          "hi": 7,
+          "lo": 0,
+          "kind": "uimm",
+          "min": 0,
+          "max": 255
+        }
+      ],
+      "match_mask": 61440,
+      "match_value": 40960,
+      "must_be_zero_mask": 3840,
+      "semantics": "Trace marker imm."
+    }
+  ],
+  "tables": {
+    "alu": [
+      { "value": 0, "name": "mov" },
+      { "value": 1, "name": "add" },
+      { "value": 2, "name": "sub" },
+      { "value": 3, "name": "and" },
+      { "value": 4, "name": "or" },
+      { "value": 5, "name": "xor" },
+      { "value": 6, "name": "cmp" },
+      { "value": 7, "name": "shl" },
+      { "value": 8, "name": "shr" }
+    ],
+    "cond": [
+      { "value": 0, "name": "jmp" },
+      { "value": 1, "name": "jz" },
+      { "value": 2, "name": "jnz" },
+      { "value": 3, "name": "jc" },
+      { "value": 4, "name": "jnc" },
+      { "value": 5, "name": "call" },
+      { "value": 6, "name": "jto" },
+      { "value": 7, "name": "jnto" }
+    ],
+    "edge": [
+      { "value": 0, "name": "none" },
+      { "value": 1, "name": "rise" },
+      { "value": 2, "name": "fall" },
+      { "value": 3, "name": "either" },
+      { "value": 4, "name": "high" },
+      { "value": 5, "name": "low" }
+    ],
+    "field": [
+      { "value": 0, "name": "out" },
+      { "value": 1, "name": "oe" },
+      { "value": 2, "name": "mask" }
+    ],
+    "half": [ { "value": 0, "name": "lo" }, { "value": 1, "name": "hi" } ]
+  },
+  "sr_semantics": [
+    "outb j: staged out[j] <- SR[7], no shift.",
+    "outl j: staged out[j] <- SR[0], no shift.",
+    "inb j: SR <- (SR << 1) | SAMPLE[j].",
+    "inr j: SR <- (SAMPLE[j] << 7) | (SR >> 1).",
+    "ssl / ssr: shift with a zero fill."
+  ],
+  "alu_semantics": [
+    "shl: C <- r[7], r <- r << 1.", "shr: C <- r[0], r <- r >> 1.",
+    "cmp / cmpi: set Z and C as for sub, without writing.",
+    "djnz: decrement r, jump if non-zero, flags unchanged."
+  ]
+}

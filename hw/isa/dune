@@ -1,0 +1,35 @@
+(library
+ (name pex_isa)
+ (modules pex_isa)
+ (libraries base yojson)
+ (preprocess
+  (pps ppx_jane)))
+
+(executable
+ (name gen_spec)
+ (modules gen_spec)
+ (libraries base stdio pex_isa))
+
+(rule
+ (alias gen)
+ (action
+  (with-stdout-to
+   isa.json.gen
+   (run ./gen_spec.exe json))))
+
+(rule
+ (alias gen)
+ (action
+  (with-stdout-to
+   isa.md.gen
+   (run ./gen_spec.exe md))))
+
+(rule
+ (alias gen)
+ (action
+  (diff %{project_root}/spec/isa.json isa.json.gen)))
+
+(rule
+ (alias gen)
+ (action
+  (diff %{project_root}/spec/isa.md isa.md.gen)))
