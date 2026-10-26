@@ -69,6 +69,14 @@ let%expect_test "overflow_257_words" =
   [%expect {| 257: program exceeds 256 words |}]
 ;;
 
+let%expect_test "tabs are whitespace" =
+  Array.iter (words ".equ\tN\t5\n\tstart:\tldi\tr0,\tN\n\t\tdjnz\tr1,\tstart\t; c\n") ~f:(printf "0x%04x\n");
+  [%expect {|
+    0x0005
+    0x4400
+    |}]
+;;
+
 let%expect_test "entry points" =
   let show src =
     match Pex_asm.assemble src with

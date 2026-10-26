@@ -21,7 +21,10 @@ type stmt =
 
 (* ---- lexing ---------------------------------------------------------- *)
 
-let strip_comment s = List.hd_exn (String.split s ~on:';')
+(* Tabs are normalised to spaces so every later split on ' ' sees them. *)
+let strip_comment s =
+  String.tr ~target:'\t' ~replacement:' ' (List.hd_exn (String.split s ~on:';'))
+;;
 
 let is_ident s =
   (not (String.is_empty s))
