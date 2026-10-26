@@ -1,0 +1,35 @@
+(library
+ (name pex_host_proto)
+ (modules pex_host_proto)
+ (libraries base yojson)
+ (preprocess
+  (pps ppx_jane)))
+
+(executable
+ (name gen_spec)
+ (modules gen_spec)
+ (libraries base stdio pex_host_proto))
+
+(rule
+ (alias gen)
+ (action
+  (with-stdout-to
+   host.json.gen
+   (run ./gen_spec.exe json))))
+
+(rule
+ (alias gen)
+ (action
+  (with-stdout-to
+   host.md.gen
+   (run ./gen_spec.exe md))))
+
+(rule
+ (alias gen)
+ (action
+  (diff %{project_root}/spec/host.json host.json.gen)))
+
+(rule
+ (alias gen)
+ (action
+  (diff %{project_root}/spec/host.md host.md.gen)))

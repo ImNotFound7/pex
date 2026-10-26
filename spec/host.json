@@ -1,0 +1,1097 @@
+{
+  "format": "pex-host-v1",
+  "status": "candidate, freeze at G2",
+  "commands": [
+    { "name": "Write_mem", "byte": 16 },
+    { "name": "Read_mem", "byte": 17 },
+    { "name": "Write_cfg", "byte": 32 },
+    { "name": "Read_cfg", "byte": 33 },
+    { "name": "Read_status", "byte": 48 },
+    { "name": "Ctrl", "byte": 64 },
+    { "name": "(Fifo_push 0)", "byte": 80 },
+    { "name": "(Fifo_push 1)", "byte": 81 },
+    { "name": "(Fifo_pop 0)", "byte": 96 },
+    { "name": "(Fifo_pop 1)", "byte": 97 },
+    { "name": "(Trace_pop 0)", "byte": 112 },
+    { "name": "(Trace_pop 1)", "byte": 113 }
+  ],
+  "ctrl": [
+    { "name": "Start", "byte": 1 },
+    { "name": "Halt", "byte": 2 },
+    { "name": "Clear_faults", "byte": 3 },
+    { "name": "(Step 0)", "byte": 128 },
+    { "name": "(Step 127)", "byte": 255 }
+  ],
+  "fields": [
+    {
+      "name": "experiment_id",
+      "space": "cfg",
+      "addr": 0,
+      "lsb": 0,
+      "width": 16,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "16-bit experiment ID, little-endian."
+    },
+    {
+      "name": "trace_mode",
+      "space": "cfg",
+      "addr": 4,
+      "lsb": 0,
+      "width": 2,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "Trace mode: 0 = MARK, 1 = EVENTS, 2 = COMMITS; 3 is illegal (HOST_CFG at START)."
+    },
+    {
+      "name": "entry0",
+      "space": "cfg",
+      "addr": 8,
+      "lsb": 0,
+      "width": 8,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "Start address of the context."
+    },
+    {
+      "name": "entry1",
+      "space": "cfg",
+      "addr": 9,
+      "lsb": 0,
+      "width": 8,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "Start address of the context."
+    },
+    {
+      "name": "out_pin0.owner",
+      "space": "cfg",
+      "addr": 16,
+      "lsb": 0,
+      "width": 2,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[0] owner: 0 none, 1 ctx0, 2 ctx1; 3 illegal."
+    },
+    {
+      "name": "out_pin0.logical",
+      "space": "cfg",
+      "addr": 16,
+      "lsb": 2,
+      "width": 3,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[0] logical index 0..7."
+    },
+    {
+      "name": "out_pin0.mode",
+      "space": "cfg",
+      "addr": 16,
+      "lsb": 5,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[0] mode: 0 push-pull, 1 open-drain (illegal on uo_out)."
+    },
+    {
+      "name": "out_pin0.idle",
+      "space": "cfg",
+      "addr": 16,
+      "lsb": 6,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[0] idle value."
+    },
+    {
+      "name": "out_pin1.owner",
+      "space": "cfg",
+      "addr": 17,
+      "lsb": 0,
+      "width": 2,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[1] owner: 0 none, 1 ctx0, 2 ctx1; 3 illegal."
+    },
+    {
+      "name": "out_pin1.logical",
+      "space": "cfg",
+      "addr": 17,
+      "lsb": 2,
+      "width": 3,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[1] logical index 0..7."
+    },
+    {
+      "name": "out_pin1.mode",
+      "space": "cfg",
+      "addr": 17,
+      "lsb": 5,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[1] mode: 0 push-pull, 1 open-drain (illegal on uo_out)."
+    },
+    {
+      "name": "out_pin1.idle",
+      "space": "cfg",
+      "addr": 17,
+      "lsb": 6,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[1] idle value."
+    },
+    {
+      "name": "out_pin2.owner",
+      "space": "cfg",
+      "addr": 18,
+      "lsb": 0,
+      "width": 2,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[2] owner: 0 none, 1 ctx0, 2 ctx1; 3 illegal."
+    },
+    {
+      "name": "out_pin2.logical",
+      "space": "cfg",
+      "addr": 18,
+      "lsb": 2,
+      "width": 3,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[2] logical index 0..7."
+    },
+    {
+      "name": "out_pin2.mode",
+      "space": "cfg",
+      "addr": 18,
+      "lsb": 5,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[2] mode: 0 push-pull, 1 open-drain (illegal on uo_out)."
+    },
+    {
+      "name": "out_pin2.idle",
+      "space": "cfg",
+      "addr": 18,
+      "lsb": 6,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[2] idle value."
+    },
+    {
+      "name": "out_pin3.owner",
+      "space": "cfg",
+      "addr": 19,
+      "lsb": 0,
+      "width": 2,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[3] owner: 0 none, 1 ctx0, 2 ctx1; 3 illegal."
+    },
+    {
+      "name": "out_pin3.logical",
+      "space": "cfg",
+      "addr": 19,
+      "lsb": 2,
+      "width": 3,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[3] logical index 0..7."
+    },
+    {
+      "name": "out_pin3.mode",
+      "space": "cfg",
+      "addr": 19,
+      "lsb": 5,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[3] mode: 0 push-pull, 1 open-drain (illegal on uo_out)."
+    },
+    {
+      "name": "out_pin3.idle",
+      "space": "cfg",
+      "addr": 19,
+      "lsb": 6,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[3] idle value."
+    },
+    {
+      "name": "out_pin4.owner",
+      "space": "cfg",
+      "addr": 20,
+      "lsb": 0,
+      "width": 2,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[4] owner: 0 none, 1 ctx0, 2 ctx1; 3 illegal."
+    },
+    {
+      "name": "out_pin4.logical",
+      "space": "cfg",
+      "addr": 20,
+      "lsb": 2,
+      "width": 3,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[4] logical index 0..7."
+    },
+    {
+      "name": "out_pin4.mode",
+      "space": "cfg",
+      "addr": 20,
+      "lsb": 5,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[4] mode: 0 push-pull, 1 open-drain (illegal on uo_out)."
+    },
+    {
+      "name": "out_pin4.idle",
+      "space": "cfg",
+      "addr": 20,
+      "lsb": 6,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[4] idle value."
+    },
+    {
+      "name": "out_pin5.owner",
+      "space": "cfg",
+      "addr": 21,
+      "lsb": 0,
+      "width": 2,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[5] owner: 0 none, 1 ctx0, 2 ctx1; 3 illegal."
+    },
+    {
+      "name": "out_pin5.logical",
+      "space": "cfg",
+      "addr": 21,
+      "lsb": 2,
+      "width": 3,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[5] logical index 0..7."
+    },
+    {
+      "name": "out_pin5.mode",
+      "space": "cfg",
+      "addr": 21,
+      "lsb": 5,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[5] mode: 0 push-pull, 1 open-drain (illegal on uo_out)."
+    },
+    {
+      "name": "out_pin5.idle",
+      "space": "cfg",
+      "addr": 21,
+      "lsb": 6,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[5] idle value."
+    },
+    {
+      "name": "out_pin6.owner",
+      "space": "cfg",
+      "addr": 22,
+      "lsb": 0,
+      "width": 2,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[6] owner: 0 none, 1 ctx0, 2 ctx1; 3 illegal."
+    },
+    {
+      "name": "out_pin6.logical",
+      "space": "cfg",
+      "addr": 22,
+      "lsb": 2,
+      "width": 3,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[6] logical index 0..7."
+    },
+    {
+      "name": "out_pin6.mode",
+      "space": "cfg",
+      "addr": 22,
+      "lsb": 5,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[6] mode: 0 push-pull, 1 open-drain (illegal on uo_out)."
+    },
+    {
+      "name": "out_pin6.idle",
+      "space": "cfg",
+      "addr": 22,
+      "lsb": 6,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[6] idle value."
+    },
+    {
+      "name": "out_pin7.owner",
+      "space": "cfg",
+      "addr": 23,
+      "lsb": 0,
+      "width": 2,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[7] owner: 0 none, 1 ctx0, 2 ctx1; 3 illegal."
+    },
+    {
+      "name": "out_pin7.logical",
+      "space": "cfg",
+      "addr": 23,
+      "lsb": 2,
+      "width": 3,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[7] logical index 0..7."
+    },
+    {
+      "name": "out_pin7.mode",
+      "space": "cfg",
+      "addr": 23,
+      "lsb": 5,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[7] mode: 0 push-pull, 1 open-drain (illegal on uo_out)."
+    },
+    {
+      "name": "out_pin7.idle",
+      "space": "cfg",
+      "addr": 23,
+      "lsb": 6,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uio[7] idle value."
+    },
+    {
+      "name": "out_pin8.owner",
+      "space": "cfg",
+      "addr": 24,
+      "lsb": 0,
+      "width": 2,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[1] owner: 0 none, 1 ctx0, 2 ctx1; 3 illegal."
+    },
+    {
+      "name": "out_pin8.logical",
+      "space": "cfg",
+      "addr": 24,
+      "lsb": 2,
+      "width": 3,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[1] logical index 0..7."
+    },
+    {
+      "name": "out_pin8.mode",
+      "space": "cfg",
+      "addr": 24,
+      "lsb": 5,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[1] mode: 0 push-pull, 1 open-drain (illegal on uo_out)."
+    },
+    {
+      "name": "out_pin8.idle",
+      "space": "cfg",
+      "addr": 24,
+      "lsb": 6,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[1] idle value."
+    },
+    {
+      "name": "out_pin9.owner",
+      "space": "cfg",
+      "addr": 25,
+      "lsb": 0,
+      "width": 2,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[2] owner: 0 none, 1 ctx0, 2 ctx1; 3 illegal."
+    },
+    {
+      "name": "out_pin9.logical",
+      "space": "cfg",
+      "addr": 25,
+      "lsb": 2,
+      "width": 3,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[2] logical index 0..7."
+    },
+    {
+      "name": "out_pin9.mode",
+      "space": "cfg",
+      "addr": 25,
+      "lsb": 5,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[2] mode: 0 push-pull, 1 open-drain (illegal on uo_out)."
+    },
+    {
+      "name": "out_pin9.idle",
+      "space": "cfg",
+      "addr": 25,
+      "lsb": 6,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[2] idle value."
+    },
+    {
+      "name": "out_pin10.owner",
+      "space": "cfg",
+      "addr": 26,
+      "lsb": 0,
+      "width": 2,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[3] owner: 0 none, 1 ctx0, 2 ctx1; 3 illegal."
+    },
+    {
+      "name": "out_pin10.logical",
+      "space": "cfg",
+      "addr": 26,
+      "lsb": 2,
+      "width": 3,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[3] logical index 0..7."
+    },
+    {
+      "name": "out_pin10.mode",
+      "space": "cfg",
+      "addr": 26,
+      "lsb": 5,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[3] mode: 0 push-pull, 1 open-drain (illegal on uo_out)."
+    },
+    {
+      "name": "out_pin10.idle",
+      "space": "cfg",
+      "addr": 26,
+      "lsb": 6,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[3] idle value."
+    },
+    {
+      "name": "out_pin11.owner",
+      "space": "cfg",
+      "addr": 27,
+      "lsb": 0,
+      "width": 2,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[4] owner: 0 none, 1 ctx0, 2 ctx1; 3 illegal."
+    },
+    {
+      "name": "out_pin11.logical",
+      "space": "cfg",
+      "addr": 27,
+      "lsb": 2,
+      "width": 3,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[4] logical index 0..7."
+    },
+    {
+      "name": "out_pin11.mode",
+      "space": "cfg",
+      "addr": 27,
+      "lsb": 5,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[4] mode: 0 push-pull, 1 open-drain (illegal on uo_out)."
+    },
+    {
+      "name": "out_pin11.idle",
+      "space": "cfg",
+      "addr": 27,
+      "lsb": 6,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[4] idle value."
+    },
+    {
+      "name": "out_pin12.owner",
+      "space": "cfg",
+      "addr": 28,
+      "lsb": 0,
+      "width": 2,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[5] owner: 0 none, 1 ctx0, 2 ctx1; 3 illegal."
+    },
+    {
+      "name": "out_pin12.logical",
+      "space": "cfg",
+      "addr": 28,
+      "lsb": 2,
+      "width": 3,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[5] logical index 0..7."
+    },
+    {
+      "name": "out_pin12.mode",
+      "space": "cfg",
+      "addr": 28,
+      "lsb": 5,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[5] mode: 0 push-pull, 1 open-drain (illegal on uo_out)."
+    },
+    {
+      "name": "out_pin12.idle",
+      "space": "cfg",
+      "addr": 28,
+      "lsb": 6,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[5] idle value."
+    },
+    {
+      "name": "out_pin13.owner",
+      "space": "cfg",
+      "addr": 29,
+      "lsb": 0,
+      "width": 2,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[6] owner: 0 none, 1 ctx0, 2 ctx1; 3 illegal."
+    },
+    {
+      "name": "out_pin13.logical",
+      "space": "cfg",
+      "addr": 29,
+      "lsb": 2,
+      "width": 3,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[6] logical index 0..7."
+    },
+    {
+      "name": "out_pin13.mode",
+      "space": "cfg",
+      "addr": 29,
+      "lsb": 5,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[6] mode: 0 push-pull, 1 open-drain (illegal on uo_out)."
+    },
+    {
+      "name": "out_pin13.idle",
+      "space": "cfg",
+      "addr": 29,
+      "lsb": 6,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[6] idle value."
+    },
+    {
+      "name": "out_pin14.owner",
+      "space": "cfg",
+      "addr": 30,
+      "lsb": 0,
+      "width": 2,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[7] owner: 0 none, 1 ctx0, 2 ctx1; 3 illegal."
+    },
+    {
+      "name": "out_pin14.logical",
+      "space": "cfg",
+      "addr": 30,
+      "lsb": 2,
+      "width": 3,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[7] logical index 0..7."
+    },
+    {
+      "name": "out_pin14.mode",
+      "space": "cfg",
+      "addr": 30,
+      "lsb": 5,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[7] mode: 0 push-pull, 1 open-drain (illegal on uo_out)."
+    },
+    {
+      "name": "out_pin14.idle",
+      "space": "cfg",
+      "addr": 30,
+      "lsb": 6,
+      "width": 1,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "uo_out[7] idle value."
+    },
+    {
+      "name": "input_map0.0",
+      "space": "cfg",
+      "addr": 48,
+      "lsb": 0,
+      "width": 4,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx0 logical input 0 -> physical input 0..12 (0-7 uio_in, 8-12 ui_in[3..7]); 13..15 illegal."
+    },
+    {
+      "name": "input_map0.1",
+      "space": "cfg",
+      "addr": 49,
+      "lsb": 0,
+      "width": 4,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx0 logical input 1 -> physical input 0..12 (0-7 uio_in, 8-12 ui_in[3..7]); 13..15 illegal."
+    },
+    {
+      "name": "input_map0.2",
+      "space": "cfg",
+      "addr": 50,
+      "lsb": 0,
+      "width": 4,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx0 logical input 2 -> physical input 0..12 (0-7 uio_in, 8-12 ui_in[3..7]); 13..15 illegal."
+    },
+    {
+      "name": "input_map0.3",
+      "space": "cfg",
+      "addr": 51,
+      "lsb": 0,
+      "width": 4,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx0 logical input 3 -> physical input 0..12 (0-7 uio_in, 8-12 ui_in[3..7]); 13..15 illegal."
+    },
+    {
+      "name": "input_map0.4",
+      "space": "cfg",
+      "addr": 52,
+      "lsb": 0,
+      "width": 4,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx0 logical input 4 -> physical input 0..12 (0-7 uio_in, 8-12 ui_in[3..7]); 13..15 illegal."
+    },
+    {
+      "name": "input_map0.5",
+      "space": "cfg",
+      "addr": 53,
+      "lsb": 0,
+      "width": 4,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx0 logical input 5 -> physical input 0..12 (0-7 uio_in, 8-12 ui_in[3..7]); 13..15 illegal."
+    },
+    {
+      "name": "input_map0.6",
+      "space": "cfg",
+      "addr": 54,
+      "lsb": 0,
+      "width": 4,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx0 logical input 6 -> physical input 0..12 (0-7 uio_in, 8-12 ui_in[3..7]); 13..15 illegal."
+    },
+    {
+      "name": "input_map0.7",
+      "space": "cfg",
+      "addr": 55,
+      "lsb": 0,
+      "width": 4,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx0 logical input 7 -> physical input 0..12 (0-7 uio_in, 8-12 ui_in[3..7]); 13..15 illegal."
+    },
+    {
+      "name": "input_map1.0",
+      "space": "cfg",
+      "addr": 56,
+      "lsb": 0,
+      "width": 4,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx1 logical input 0 -> physical input 0..12 (0-7 uio_in, 8-12 ui_in[3..7]); 13..15 illegal."
+    },
+    {
+      "name": "input_map1.1",
+      "space": "cfg",
+      "addr": 57,
+      "lsb": 0,
+      "width": 4,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx1 logical input 1 -> physical input 0..12 (0-7 uio_in, 8-12 ui_in[3..7]); 13..15 illegal."
+    },
+    {
+      "name": "input_map1.2",
+      "space": "cfg",
+      "addr": 58,
+      "lsb": 0,
+      "width": 4,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx1 logical input 2 -> physical input 0..12 (0-7 uio_in, 8-12 ui_in[3..7]); 13..15 illegal."
+    },
+    {
+      "name": "input_map1.3",
+      "space": "cfg",
+      "addr": 59,
+      "lsb": 0,
+      "width": 4,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx1 logical input 3 -> physical input 0..12 (0-7 uio_in, 8-12 ui_in[3..7]); 13..15 illegal."
+    },
+    {
+      "name": "input_map1.4",
+      "space": "cfg",
+      "addr": 60,
+      "lsb": 0,
+      "width": 4,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx1 logical input 4 -> physical input 0..12 (0-7 uio_in, 8-12 ui_in[3..7]); 13..15 illegal."
+    },
+    {
+      "name": "input_map1.5",
+      "space": "cfg",
+      "addr": 61,
+      "lsb": 0,
+      "width": 4,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx1 logical input 5 -> physical input 0..12 (0-7 uio_in, 8-12 ui_in[3..7]); 13..15 illegal."
+    },
+    {
+      "name": "input_map1.6",
+      "space": "cfg",
+      "addr": 62,
+      "lsb": 0,
+      "width": 4,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx1 logical input 6 -> physical input 0..12 (0-7 uio_in, 8-12 ui_in[3..7]); 13..15 illegal."
+    },
+    {
+      "name": "input_map1.7",
+      "space": "cfg",
+      "addr": 63,
+      "lsb": 0,
+      "width": 4,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx1 logical input 7 -> physical input 0..12 (0-7 uio_in, 8-12 ui_in[3..7]); 13..15 illegal."
+    },
+    {
+      "name": "param0.0",
+      "space": "cfg",
+      "addr": 64,
+      "lsb": 0,
+      "width": 16,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx0 parameter register P0, little-endian."
+    },
+    {
+      "name": "param0.1",
+      "space": "cfg",
+      "addr": 66,
+      "lsb": 0,
+      "width": 16,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx0 parameter register P1, little-endian."
+    },
+    {
+      "name": "param0.2",
+      "space": "cfg",
+      "addr": 68,
+      "lsb": 0,
+      "width": 16,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx0 parameter register P2, little-endian."
+    },
+    {
+      "name": "param0.3",
+      "space": "cfg",
+      "addr": 70,
+      "lsb": 0,
+      "width": 16,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx0 parameter register P3, little-endian."
+    },
+    {
+      "name": "param1.0",
+      "space": "cfg",
+      "addr": 72,
+      "lsb": 0,
+      "width": 16,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx1 parameter register P0, little-endian."
+    },
+    {
+      "name": "param1.1",
+      "space": "cfg",
+      "addr": 74,
+      "lsb": 0,
+      "width": 16,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx1 parameter register P1, little-endian."
+    },
+    {
+      "name": "param1.2",
+      "space": "cfg",
+      "addr": 76,
+      "lsb": 0,
+      "width": 16,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx1 parameter register P2, little-endian."
+    },
+    {
+      "name": "param1.3",
+      "space": "cfg",
+      "addr": 78,
+      "lsb": 0,
+      "width": 16,
+      "access": "RW-halted",
+      "reset": 0,
+      "doc": "ctx1 parameter register P3, little-endian."
+    },
+    {
+      "name": "run.ctx0",
+      "space": "status",
+      "addr": 0,
+      "lsb": 0,
+      "width": 1,
+      "access": "RO",
+      "reset": 0,
+      "doc": "ctx0 running (1) or halted (0)."
+    },
+    {
+      "name": "run.ctx1",
+      "space": "status",
+      "addr": 0,
+      "lsb": 1,
+      "width": 1,
+      "access": "RO",
+      "reset": 0,
+      "doc": "ctx1 running (1) or halted (0)."
+    },
+    {
+      "name": "host_error",
+      "space": "status",
+      "addr": 1,
+      "lsb": 0,
+      "width": 1,
+      "access": "RO-sticky",
+      "reset": 0,
+      "doc": "Set by an invalid command byte, a rejected or malformed access, or an invalid Ctrl byte."
+    },
+    {
+      "name": "fault.ctx0",
+      "space": "status",
+      "addr": 8,
+      "lsb": 0,
+      "width": 2,
+      "access": "RO-sticky",
+      "reset": 0,
+      "doc": "ctx0 sticky fault: 0 none, 1 LATE, 2 ILLEGAL, 3 HOST_CFG."
+    },
+    {
+      "name": "fault.ctx1",
+      "space": "status",
+      "addr": 9,
+      "lsb": 0,
+      "width": 2,
+      "access": "RO-sticky",
+      "reset": 0,
+      "doc": "ctx1 sticky fault: 0 none, 1 LATE, 2 ILLEGAL, 3 HOST_CFG."
+    },
+    {
+      "name": "flag.ctx0.event_overrun",
+      "space": "status",
+      "addr": 16,
+      "lsb": 0,
+      "width": 1,
+      "access": "RO-sticky",
+      "reset": 0,
+      "doc": "ctx0: event captured while the previous capture was unread."
+    },
+    {
+      "name": "flag.ctx0.trace_lost",
+      "space": "status",
+      "addr": 16,
+      "lsb": 1,
+      "width": 1,
+      "access": "RO-sticky",
+      "reset": 0,
+      "doc": "ctx0: trace entry dropped, trace FIFO full."
+    },
+    {
+      "name": "flag.ctx0.host_push_overflow",
+      "space": "status",
+      "addr": 16,
+      "lsb": 2,
+      "width": 1,
+      "access": "RO-sticky",
+      "reset": 0,
+      "doc": "ctx0: Fifo_push to a full RX FIFO; byte dropped."
+    },
+    {
+      "name": "flag.ctx0.host_pop_underflow",
+      "space": "status",
+      "addr": 16,
+      "lsb": 3,
+      "width": 1,
+      "access": "RO-sticky",
+      "reset": 0,
+      "doc": "ctx0: Fifo_pop from an empty TX FIFO; 0x00 returned."
+    },
+    {
+      "name": "flag.ctx1.event_overrun",
+      "space": "status",
+      "addr": 17,
+      "lsb": 0,
+      "width": 1,
+      "access": "RO-sticky",
+      "reset": 0,
+      "doc": "ctx1: event captured while the previous capture was unread."
+    },
+    {
+      "name": "flag.ctx1.trace_lost",
+      "space": "status",
+      "addr": 17,
+      "lsb": 1,
+      "width": 1,
+      "access": "RO-sticky",
+      "reset": 0,
+      "doc": "ctx1: trace entry dropped, trace FIFO full."
+    },
+    {
+      "name": "flag.ctx1.host_push_overflow",
+      "space": "status",
+      "addr": 17,
+      "lsb": 2,
+      "width": 1,
+      "access": "RO-sticky",
+      "reset": 0,
+      "doc": "ctx1: Fifo_push to a full RX FIFO; byte dropped."
+    },
+    {
+      "name": "flag.ctx1.host_pop_underflow",
+      "space": "status",
+      "addr": 17,
+      "lsb": 3,
+      "width": 1,
+      "access": "RO-sticky",
+      "reset": 0,
+      "doc": "ctx1: Fifo_pop from an empty TX FIFO; 0x00 returned."
+    },
+    {
+      "name": "rx_level.ctx0",
+      "space": "status",
+      "addr": 32,
+      "lsb": 0,
+      "width": 8,
+      "access": "RO",
+      "reset": 0,
+      "doc": "ctx0 entries currently in the rx FIFO."
+    },
+    {
+      "name": "tx_level.ctx0",
+      "space": "status",
+      "addr": 33,
+      "lsb": 0,
+      "width": 8,
+      "access": "RO",
+      "reset": 0,
+      "doc": "ctx0 entries currently in the tx FIFO."
+    },
+    {
+      "name": "trace_level.ctx0",
+      "space": "status",
+      "addr": 34,
+      "lsb": 0,
+      "width": 8,
+      "access": "RO",
+      "reset": 0,
+      "doc": "ctx0 entries currently in the trace FIFO."
+    },
+    {
+      "name": "rx_level.ctx1",
+      "space": "status",
+      "addr": 36,
+      "lsb": 0,
+      "width": 8,
+      "access": "RO",
+      "reset": 0,
+      "doc": "ctx1 entries currently in the rx FIFO."
+    },
+    {
+      "name": "tx_level.ctx1",
+      "space": "status",
+      "addr": 37,
+      "lsb": 0,
+      "width": 8,
+      "access": "RO",
+      "reset": 0,
+      "doc": "ctx1 entries currently in the tx FIFO."
+    },
+    {
+      "name": "trace_level.ctx1",
+      "space": "status",
+      "addr": 38,
+      "lsb": 0,
+      "width": 8,
+      "access": "RO",
+      "reset": 0,
+      "doc": "ctx1 entries currently in the trace FIFO."
+    }
+  ]
+}

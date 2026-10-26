@@ -1,0 +1,6 @@
+(library
+ (name test_pex_host_proto)
+ (libraries base stdio pex_host_proto)
+ (inline_tests)
+ (preprocess
+  (pps ppx_jane)))
