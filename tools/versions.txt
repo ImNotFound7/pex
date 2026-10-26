@@ -28,4 +28,4 @@ LibreLane: 3.1.0.dev3
 # Project
 github username: ImNotFound7
 top_module: tt_um_imnotfound7_pex
-public repo: pending (user)
+public repo: https://github.com/ImNotFound7/pex.git (remote not yet added; later task)
