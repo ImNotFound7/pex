@@ -1,0 +1,5 @@
+(executable
+ (name pexasm)
+ (libraries core core_unix.command_unix pex_asm yojson)
+ (preprocess
+  (pps ppx_jane)))

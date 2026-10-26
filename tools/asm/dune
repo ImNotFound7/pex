@@ -1,0 +1,5 @@
+(library
+ (name pex_asm)
+ (libraries base pex_isa yojson)
+ (preprocess
+  (pps ppx_jane)))
