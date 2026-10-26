@@ -1,6 +1,6 @@
 (executable
  (name gen)
- (libraries base hardcaml pex_top)
+ (libraries base hardcaml mem_probe pex_top)
  (preprocess
   (pps ppx_jane)))
 

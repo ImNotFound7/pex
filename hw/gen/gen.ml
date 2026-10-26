@@ -8,7 +8,7 @@ module Circuit = Circuit.With_interface (Pex_top.I) (Pex_top.O)
 
 (* The circuit emitted as the top module. Change only this to emit a
    different circuit. *)
-let top = Pex_top.create
+let top = Mem_probe.create ~kind:`Ff_128x16
 
 let () =
   let scope = Scope.create ~flatten_design:true () in
