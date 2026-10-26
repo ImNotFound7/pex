@@ -1,0 +1,31 @@
+# Toolchain pins (macOS arm64, captured 2026-10-26 from actual command output)
+ocaml: 5.2.1 (opam switch "pex")
+opam: 2.6.1 (Homebrew)
+dune: 3.24.2
+hardcaml: v0.17.0
+hardcaml_waveterm: v0.17.0
+ppx_hardcaml: v0.17.0
+ppx_expect: v0.17.2
+ppx_jane: v0.17.0
+ppx_yojson_conv: v0.17.0
+yojson: 3.0.0
+oss-cad-suite: 2026-10-25 (darwin-arm64, ~/tools/oss-cad-suite)
+iverilog: Icarus Verilog 14.0 (devel) s20260301-670-g2b8d42dc0-dirty
+verilator: 5.053 devel rev v5.052-586-g1838b6ed0 (mod)
+yosys: 0.70+219 (git sha1 5053d0e26)
+sby: bundled in oss-cad-suite 2026-10-25 (no --version flag; `sby --help` works)
+python: 3.14.7 (.venv)
+cocotb: 2.1.0
+pytest: 9.1.1
+
+# Flow pins (plan Global Constraints)
+template: TinyTapeout/ttihp-verilog-template commit 231f26a58b8d2efbab25bef24b29c94362a431a3 (branch cmos5l, 2026-10-19)
+gds action: TinyTapeout/tt-gds-action@ihp-cmos5l
+pdk: ihp-sg13cmos5l
+tt-support-tools: d66cf179e7bc4d296362ab7e2e3b344dc3c4f665
+LibreLane: 3.1.0.dev3
+
+# Project
+github username: ImNotFound7
+top_module: tt_um_imnotfound7_pex
+public repo: pending (user)
