@@ -9,12 +9,12 @@ You can also include images in this folder and reference them in the markdown. E
 
 ## How it works
 
-Explain how your project works
+PEX is a protocol-emulator ASIC written in Hardcaml. This revision is a placeholder stub top (module tt_um_imnotfound7_pex) used to validate the Tiny Tapeout IHP SG13CMOS5L flow; the protocol logic and memory probes follow in later revisions.
 
 ## How to test
 
-Explain how to use your project
+Release reset (rst_n high) and clock the design; the stub counts on the dedicated outputs. See test/test.py for the expected behaviour.
 
 ## External hardware
 
-List external hardware used in your project (e.g. PMOD, LED display, etc), if any
+None.
